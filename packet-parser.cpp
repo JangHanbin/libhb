@@ -3,7 +3,6 @@
 
 bool EtherParse(u_int8_t **data, int &data_len, int type)
 {
-    std::cout<<"Faile?"<<std::endl;
     struct ether_header *ep = reinterpret_cast<struct ether_header*>(*data);
     if(ntohs(ep->ether_type)==type)
     {
@@ -18,10 +17,67 @@ bool EtherParse(u_int8_t **data, int &data_len, int type)
 
 bool IpParse(u_int8_t **data, int &data_len, int type)
 {
+    struct iphdr *iph=reinterpret_cast<struct iphdr*>(*data);
 
+    if(iph->protocol==type)
+    {
+        *data=*data+(iph->ihl*4);
+        data_len-=(iph->ihl*4);
+        return true;
+    }
+
+
+    return false;
 }
+
 
 bool TcpDataParse(u_int8_t **data, int &data_len)
 {
+    struct tcphdr* tcph = reinterpret_cast<struct tcphdr*>(*data);
 
+    if((data_len - tcph->doff*4)<=0)
+    {
+        //there is no payload
+        return false;
+    }
+    else
+    {
+        data_len-=(tcph->doff*4);
+        *data=*data+(tcph->doff*4);
+        return true;
+    }
+}
+
+bool RecvPacket(pcap_t *pcd, uint8_t **buf, int &data_len)
+{
+    const u_char *pkt_data;
+    struct pcap_pkthdr *pkt_header;
+    int value_of_next_ex;
+
+    while(true)
+    {
+        value_of_next_ex=pcap_next_ex(pcd,&pkt_header,&pkt_data);
+
+        switch (value_of_next_ex)
+        {
+        case 1:
+            *buf=reinterpret_cast<uint8_t*>(const_cast<u_char*>(pkt_data));
+            data_len=static_cast<int>(pkt_header->caplen);
+            return true;
+
+        case 0:
+            //cout<<"need a sec.. to packet capture"<<endl;
+            continue;
+        case -1:
+            perror("pcap_next_ex function has an error!!");
+
+            exit(1);
+
+        case -2:
+            perror("the packet have reached EOF!!");
+            return false;
+        default:
+            return false;
+        }
+    }
 }
