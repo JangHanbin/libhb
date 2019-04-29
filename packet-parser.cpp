@@ -30,6 +30,20 @@ bool IpParse(u_int8_t **data, int &data_len, int type)
     return false;
 }
 
+uint8_t *IpParse(uint8_t *data, int &data_len, int type)
+{
+    struct iphdr *iph=reinterpret_cast<struct iphdr*>(data);
+
+    if(iph->protocol==type)
+    {
+        data_len-=(iph->ihl*4);
+        return data+(iph->ihl*4);
+    }
+
+
+    return nullptr;
+}
+
 
 bool TcpDataParse(u_int8_t **data, int &data_len)
 {
@@ -48,7 +62,7 @@ bool TcpDataParse(u_int8_t **data, int &data_len)
     }
 }
 
-bool RecvPacket(pcap_t *pcd, uint8_t **buf, int &data_len)
+bool RecvPacketFromPcap(pcap_t *pcd, uint8_t **buf, int &data_len)
 {
     const u_char *pkt_data;
     struct pcap_pkthdr *pkt_header;
@@ -56,8 +70,7 @@ bool RecvPacket(pcap_t *pcd, uint8_t **buf, int &data_len)
 
     while(true)
     {
-        value_of_next_ex=pcap_next_ex(pcd,&pkt_header,&pkt_data);
-
+        value_of_next_ex=pcap_next_ex(pcd,&pkt_header,&pkt_data);        
         switch (value_of_next_ex)
         {
         case 1:
@@ -70,7 +83,6 @@ bool RecvPacket(pcap_t *pcd, uint8_t **buf, int &data_len)
             continue;
         case -1:
             perror("pcap_next_ex function has an error!!");
-
             exit(1);
 
         case -2:
@@ -80,4 +92,15 @@ bool RecvPacket(pcap_t *pcd, uint8_t **buf, int &data_len)
             return false;
         }
     }
+}
+
+bool RecvPacketFromRaw(int raw_fd, uint8_t *buf, int size_of_buf, int &captured_length,int flag )
+{
+
+//    captured_length = static_cast<int>(recv(raw_fd,buf,static_cast<size_t>(size_of_buf),flag));
+    captured_length = ::recv(raw_fd,buf,size_of_buf,flag);
+    if(captured_length<0)
+        return false;
+
+    return true;
 }

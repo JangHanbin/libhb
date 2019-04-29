@@ -55,10 +55,7 @@ uint16_t calICMPChecksum(uint8_t *data,int dataLen)
 
     //Cal ICMP Segement Checksum
     icmph->checksum=0; //set Checksum field 0
-    uint16_t tcpHeaderResult=calculate((uint16_t*)icmph,(dataLen-(iph->ihl*4)));
-
-
-    uint16_t checksum=tcpHeaderResult;
+    uint16_t checksum=calculate((uint16_t*)icmph,(dataLen-(iph->ihl*4)));
 
     checksum=ntohs(checksum^0xffff); //xor checksum
     icmph->checksum=checksum;
