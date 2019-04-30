@@ -6,7 +6,7 @@
 #include <netinet/ether.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
-#include <linux/icmp.h>
+#include <netinet/ip_icmp.h>
 
 bool RecvPacketFromPcap(pcap_t* pcd, uint8_t** buf, int& data_len);
 bool RecvPacketFromRaw(int raw_fd, uint8_t* buf, int size_of_buf, int& captured_length , int flag);

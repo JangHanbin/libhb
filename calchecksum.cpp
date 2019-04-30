@@ -1,8 +1,3 @@
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
-#include <iostream>
-#include <cstring>
 #include "calchecksum.h"
 #include "printdata.h"
 
@@ -51,14 +46,14 @@ uint16_t calICMPChecksum(uint8_t *data,int dataLen)
 
     //init Pseudoheader
     struct iphdr *iph=(struct iphdr*)data;
-    struct icmphdr *icmph=(struct icmphdr*)(data+iph->ihl*4);
+    struct icmp *icmph=(struct icmp*)(data+iph->ihl*4);
 
     //Cal ICMP Segement Checksum
-    icmph->checksum=0; //set Checksum field 0
+    icmph->icmp_cksum=0; //set Checksum field 0
     uint16_t checksum=calculate((uint16_t*)icmph,(dataLen-(iph->ihl*4)));
 
     checksum=ntohs(checksum^0xffff); //xor checksum
-    icmph->checksum=checksum;
+    icmph->icmp_cksum=checksum;
 
     return checksum;
 }
@@ -115,7 +110,6 @@ uint16_t calculate(uint16_t* data, int dataLen)
 
     for (int i = 0; i < length; ++i) // cal 2byte unit
     {
-        //cout<<hex<<tempChecksum<<" + "<<ntohs(data[i])<<dec<<endl;
 
         if(i==length-1&&flag) //last num is odd num
             tempChecksum+=ntohs(data[i]&0x00ff);
@@ -127,8 +121,38 @@ uint16_t calculate(uint16_t* data, int dataLen)
 
     }
 
-    result=tempChecksum;
+    result=static_cast<uint16_t>(tempChecksum);
     return result;
+}
+
+uint16_t in_cksum(uint16_t* data, int data_len)
+{
+    uint16_t answer;
+    uint32_t sum = 0;
+    uint16_t odd_byte = 0;
+
+    while( data_len > 1 )
+    {
+        sum += *data++;
+        data_len -= 2;
+
+    }/* WHILE */
+
+
+    /* mop up an odd byte, if necessary */
+    if( data_len == 1 )
+    {
+        *( u_char* )( &odd_byte ) = *( u_char* )data;
+        sum += odd_byte;
+
+    }/* IF */
+
+    sum = ( sum >> 16 ) + ( sum & 0xffff );    /* add hi 16 to low 16 */
+    sum += ( sum >> 16 );                    /* add carry */
+    answer = ~sum;                            /* ones-complement, truncate*/
+
+    return ( answer );
+
 }
 
 uint16_t calIPChecksum(uint8_t* data)
