@@ -1,16 +1,26 @@
+#include <iostream>
+#include <linux/if.h>
+#include <linux/if_tun.h>
+#include <cstdio>
+#include <cstring>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <arpa/inet.h>
 #include "tunallocator.h"
 
-TunAllocator::TunAllocator(char* name)
+TunAllocator::TunAllocator(const char* name)
 {
-    strncpy(tun_name_, name, IFNAMSIZ);
+    std::strncpy(tun_name_, name, IFNAMSIZ);
 }
 
 int TunAllocator::TunAlloc(int flags)
 {
-
     struct ifreq ifr;
     int fd, err;
-    char *clonedev = const_cast<char * >("/dev/net/tun");
+    const char *clonedev = "/dev/net/tun";
 
     /* Arguments taken by the function:
      *
@@ -33,12 +43,12 @@ int TunAllocator::TunAlloc(int flags)
         /* if a device name was specified, put it in the structure; otherwise,
         * the kernel will try to allocate the "next" device of the
         * specified type */
-        strncpy(ifr.ifr_name, tun_name_, IFNAMSIZ);
+        std::strncpy(ifr.ifr_name, tun_name_, IFNAMSIZ);
     }
     /* try to create the device */
     if( (err = ioctl(fd, TUNSETIFF, static_cast<void * >(&ifr))) < 0 ) {
         close(fd);
-        perror("CREATE DEVICE ERR : ");
+        std::perror("CREATE DEVICE ERR : ");
         return err;
     }
 
@@ -47,15 +57,14 @@ int TunAllocator::TunAlloc(int flags)
      * it. Note that the caller MUST reserve space in *dev (see calling
      * code below) */
 
-    strcpy(tun_name_, ifr.ifr_name);
+    std::strncpy(tun_name_, ifr.ifr_name, IFNAMSIZ);
     /* this is the special file descriptor that the caller will use to talk
      * with the virtual interface */
     return fd;
 }
 
-int TunAllocator::TunSet(char *addr, char *netmask)
+int TunAllocator::TunSet(const char *addr, const char *netmask)
 {
-
     struct ifreq ifr;
     struct sockaddr_in ip_addr;
 

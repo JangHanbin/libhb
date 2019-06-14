@@ -1,18 +1,17 @@
-#include "packet-parser.h"
 #include <iostream>
+#include "packet-parser.h"
 
 bool EtherParse(u_int8_t **data, int &data_len, int type)
 {
     struct ether_header *ep = reinterpret_cast<struct ether_header*>(*data);
     if(ntohs(ep->ether_type)==type)
     {
-        *data=*data+sizeof(struct ether_header);
+        *data+=sizeof(struct ether_header);
         data_len-=sizeof(struct ether_header);
         return true;
     }
 
     return false;
-
 }
 
 bool IpParse(u_int8_t **data, int &data_len, int type)
@@ -21,11 +20,10 @@ bool IpParse(u_int8_t **data, int &data_len, int type)
 
     if(iph->protocol==type)
     {
-        *data=*data+(iph->ihl*4);
-        data_len-=(iph->ihl*4);
+        *data+=iph->ihl*4;
+        data_len-=iph->ihl*4;
         return true;
     }
-
 
     return false;
 }
@@ -36,10 +34,9 @@ uint8_t *IpParse(uint8_t *data, int &data_len, int type)
 
     if(iph->protocol==type)
     {
-        data_len-=(iph->ihl*4);
-        return data+(iph->ihl*4);
+        data_len-=iph->ihl*4;
+        return data+iph->ihl*4;
     }
-
 
     return nullptr;
 }
@@ -49,15 +46,15 @@ bool TcpDataParse(u_int8_t **data, int &data_len)
 {
     struct tcphdr* tcph = reinterpret_cast<struct tcphdr*>(*data);
 
-    if((data_len - tcph->doff*4)<=0)
+    if(data_len <= tcph->doff*4)
     {
         //there is no payload
         return false;
     }
     else
     {
-        data_len-=(tcph->doff*4);
-        *data=*data+(tcph->doff*4);
+        data_len-=tcph->doff*4;
+        *data+=tcph->doff*4;
         return true;
     }
 }

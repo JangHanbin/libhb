@@ -1,11 +1,9 @@
 #ifndef CALCHECKSUM_H
 #define CALCHECKSUM_H
-#include <iostream>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h>
-#include <cstring>
 
 
 

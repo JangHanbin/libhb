@@ -1,3 +1,5 @@
+#include <iostream>
+#include <cstring>
 #include "calchecksum.h"
 #include "printdata.h"
 

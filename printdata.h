@@ -1,9 +1,7 @@
 #ifndef PRINTDATA_H
 #define PRINTDATA_H
 
-#include <iostream>
 #include <stdint.h>
-#include <iomanip>
 #include <vector>
 
 #define MAX_OF_LINE 16
